@@ -323,30 +323,29 @@ typedef void FlushbarStatusCallback(FlushbarStatus status);
 /// [progressIndicatorValueColor] a [LinearProgressIndicator] configuration parameter.
 /// [userInputForm] A [TextFormField] in case you want a simple user input. Every other widget is ignored if this is not null.
 class Flushbar<T extends Object> extends StatefulWidget {
-  Flushbar(
-      {Key key,
-      this.title,
-      this.message,
-      this.titleText,
-      this.messageText,
-      this.icon,
-      this.aroundPadding = const EdgeInsets.all(0.0),
-      this.borderRadius = 0.0,
-      this.backgroundColor = const Color(0xFF303030),
-      this.leftBarIndicatorColor,
-      this.boxShadow,
-      this.backgroundGradient,
-      this.mainButton,
-      this.duration,
-      this.isDismissible = true,
-      this.showProgressIndicator = false,
-      this.progressIndicatorController,
-      this.progressIndicatorBackgroundColor,
-      this.progressIndicatorValueColor,
-      this.flushbarPosition = FlushbarPosition.BOTTOM,
-      this.forwardAnimationCurve = Curves.easeOut,
-      this.reverseAnimationCurve = Curves.fastOutSlowIn,
-      this.animationDuration = const Duration(seconds: 1)})
+  Flushbar({Key key,
+    this.title,
+    this.message,
+    this.titleText,
+    this.messageText,
+    this.icon,
+    this.aroundPadding = const EdgeInsets.all(0.0),
+    this.borderRadius = 0.0,
+    this.backgroundColor = const Color(0xFF303030),
+    this.leftBarIndicatorColor,
+    this.shadowColor,
+    this.backgroundGradient,
+    this.mainButton,
+    this.duration,
+    this.isDismissible = true,
+    this.showProgressIndicator = false,
+    this.progressIndicatorController,
+    this.progressIndicatorBackgroundColor,
+    this.progressIndicatorValueColor,
+    this.flushbarPosition = FlushbarPosition.BOTTOM,
+    this.forwardAnimationCurve = Curves.easeOut,
+    this.reverseAnimationCurve = Curves.fastOutSlowIn,
+    this.animationDuration = const Duration(seconds: 1)})
       : super(key: key);
 
   /// [onStatusChanged] A callback used to listen to Flushbar status [FlushbarStatus]. Set it using [setStatusListener()]
@@ -357,7 +356,7 @@ class Flushbar<T extends Object> extends StatefulWidget {
   Text messageText;
   Color backgroundColor;
   Color leftBarIndicatorColor;
-  BoxShadow boxShadow;
+  Color shadowColor;
   Gradient backgroundGradient;
   Widget icon;
   FlatButton mainButton;
@@ -456,7 +455,7 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
     super.initState();
 
     assert(((widget.userInputForm != null || (widget.message != null || widget.messageText != null))),
-        "Don't forget to show a message to your user!");
+    "Don't forget to show a message to your user!");
 
     _isTitlePresent = (widget.title != null || widget.titleText != null);
     _messageTopMargin = _isTitlePresent ? 6.0 : 16.0;
@@ -482,8 +481,31 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
   }
 
   void _setBoxShadow() {
-    if (widget.boxShadow != null) {
-      _boxShadow = widget.boxShadow;
+    switch (widget.flushbarPosition) {
+      case FlushbarPosition.TOP:
+        {
+          if (widget.shadowColor != null) {
+            _boxShadow = BoxShadow(
+              color: widget.shadowColor,
+              offset: Offset(0.0, 2.0),
+              blurRadius: 3.0,
+            );
+          }
+
+          break;
+        }
+      case FlushbarPosition.BOTTOM:
+        {
+          if (widget.shadowColor != null) {
+            _boxShadow = BoxShadow(
+              color: widget.shadowColor,
+              offset: Offset(0.0, -0.7),
+              blurRadius: 3.0,
+            );
+          }
+
+          break;
+        }
     }
   }
 
@@ -491,7 +513,7 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
 
   void _configureLeftBarFuture() {
     SchedulerBinding.instance.addPostFrameCallback(
-      (_) {
+          (_) {
         final keyContext = backgroundBoxKey.currentContext;
 
         if (keyContext != null) {
@@ -542,16 +564,7 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
       heightFactor: 1.0,
       child: Material(
         color: Colors.transparent,
-        child: SafeArea(
-          minimum: widget.flushbarPosition == FlushbarPosition.BOTTOM
-              ? EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom)
-              : EdgeInsets.only(top: MediaQuery.of(context).viewInsets.top),
-          bottom: widget.flushbarPosition == FlushbarPosition.BOTTOM,
-          top: widget.flushbarPosition == FlushbarPosition.TOP,
-          left: false,
-          right: false,
-          child: _getFlushbar(),
-        ),
+        child: _getFlushbar(),
       ),
     );
   }
@@ -598,10 +611,10 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
         children: [
           widget.showProgressIndicator
               ? LinearProgressIndicator(
-                  value: widget.progressIndicatorController != null ? _progressAnimation.value : null,
-                  backgroundColor: widget.progressIndicatorBackgroundColor,
-                  valueColor: widget.progressIndicatorValueColor,
-                )
+            value: widget.progressIndicatorController != null ? _progressAnimation.value : null,
+            backgroundColor: widget.progressIndicatorBackgroundColor,
+            valueColor: widget.progressIndicatorValueColor,
+          )
               : _emptyWidget,
           new Row(mainAxisSize: MainAxisSize.max, children: _getAppropriateRowLayout()),
         ],
@@ -619,11 +632,14 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
+              Container(
+                height: MediaQuery.of(context).padding.top,
+              ),
               (_isTitlePresent)
                   ? new Padding(
-                      padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
-                      child: _getTitleText(),
-                    )
+                padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+                child: _getTitleText(),
+              )
                   : _emptyWidget,
               new Padding(
                 padding: EdgeInsets.only(top: _messageTopMargin, left: 16.0, right: 16.0, bottom: 16.0),
@@ -648,9 +664,9 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
             children: <Widget>[
               (_isTitlePresent)
                   ? new Padding(
-                      padding: const EdgeInsets.only(top: 16.0, left: 4.0, right: 16.0),
-                      child: _getTitleText(),
-                    )
+                padding: const EdgeInsets.only(top: 16.0, left: 4.0, right: 16.0),
+                child: _getTitleText(),
+              )
                   : _emptyWidget,
               new Padding(
                 padding: EdgeInsets.only(top: _messageTopMargin, left: 4.0, right: 16.0, bottom: 16.0),
@@ -671,9 +687,9 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
             children: <Widget>[
               (_isTitlePresent)
                   ? new Padding(
-                      padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
-                      child: _getTitleText(),
-                    )
+                padding: const EdgeInsets.only(top: 16.0, left: 16.0, right: 16.0),
+                child: _getTitleText(),
+              )
                   : _emptyWidget,
               new Padding(
                 padding: EdgeInsets.only(top: _messageTopMargin, left: 16.0, right: 8.0, bottom: 16.0),
@@ -699,9 +715,9 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
             children: <Widget>[
               (_isTitlePresent)
                   ? new Padding(
-                      padding: const EdgeInsets.only(top: 16.0, left: 4.0, right: 8.0),
-                      child: _getTitleText(),
-                    )
+                padding: const EdgeInsets.only(top: 16.0, left: 4.0, right: 8.0),
+                child: _getTitleText(),
+              )
                   : _emptyWidget,
               new Padding(
                 padding: EdgeInsets.only(top: _messageTopMargin, left: 4.0, right: 8.0, bottom: 16.0),
@@ -711,9 +727,9 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
           ),
         ),
         new Padding(
-              padding: const EdgeInsets.only(right: 4.0),
-              child: _getMainActionButton(),
-            ) ??
+          padding: const EdgeInsets.only(right: 4.0),
+          child: _getMainActionButton(),
+        ) ??
             _emptyWidget,
       ];
     }
@@ -757,9 +773,9 @@ class _FlushbarState<K extends Object> extends State<Flushbar> with TickerProvid
     return widget.titleText != null
         ? widget.titleText
         : new Text(
-            widget.title ?? "",
-            style: TextStyle(fontSize: 16.0, color: Colors.white, fontWeight: FontWeight.bold),
-          );
+      widget.title ?? "",
+      style: TextStyle(fontSize: 16.0, color: Colors.white, fontWeight: FontWeight.bold),
+    );
   }
 
   Text _getDefaultNotificationText() {
